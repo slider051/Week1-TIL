@@ -1,0 +1,14 @@
+touch a.txt : 파일생성
+mkdir startcamp2 : 폴더생성
+ls : 현재 작업중인 디렉토리에 있는 폴더/파일 목록
+start : 파일 실행
+cd : 디렉토리 변경(위치 이동)
+cd .. : 상위 디렉토리로
+cd ../../.. : 상위의 상위의 상위로
+rm : 파일삭제
+rm -r : 폴더(디렉토리)삭제
+pwd : 절대경로
+
+ctrl + shift + c : 터미널 복사
+shift + insert : 터미널 붙여넣기
+ctrl + l : 클리어
