@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="ko" class="scroll-smooth dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>I AM - 나의 여행 버킷리스트</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            primary: '#3b82f6', // 비비드 블루
+                            navy: '#0f172a',    // 딥 블루 네이비
+                            darkcard: 'rgba(30, 41, 59, 0.7)', // 다크모드 반투명 카드
+                            lightcard: 'rgba(255, 255, 255, 0.7)', // 라이트모드 반투명 카드
+                            accent: '#ec4899'    // 찜하기 핑크
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans KR', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.1);
+        }
+        .dark ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.5);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3b82f6;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-brand-navy dark:text-slate-100 min-h-screen transition-colors duration-300 flex flex-col relative overflow-x-hidden">
+
+    <!-- 몽환적인 파티클 애니메이션을 위한 고정 캔버스 (클릭 통과 처리) -->
+    <canvas id="particle-canvas" class="fixed inset-0 z-0 pointer-events-none"></canvas>
+
+    <!-- Scroll Progress Indicator -->
+    <div id="scroll-progress" class="fixed top-0 left-0 h-1.5 bg-gradient-to-r from-brand-primary to-brand-accent z-50 transition-all duration-100" style="width: 0%;"></div>
+
+    <!-- Navigation Bar -->
+    <nav class="sticky top-0 z-40 bg-white/70 dark:bg-brand-navy/70 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-800/50 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="text-2xl">✈️</span>
+                <span class="font-bold text-xl tracking-wider bg-gradient-to-r from-brand-primary to-brand-accent bg-clip-text text-transparent">I AM BUCKET</span>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <!-- Bookmarks counter badge (Touch target optimized for mobile) -->
+                <button id="nav-like-btn" onclick="scrollToSection('destinations-section')" class="relative p-3 rounded-full hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all group min-w-[44px] min-h-[44px] flex items-center justify-center">
+                    <span class="text-xl text-brand-accent">❤️</span>
+                    <span id="like-count" class="absolute -top-1 -right-1 bg-brand-accent text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white dark:border-brand-navy">0</span>
+                </button>
+
+                <!-- Theme Toggle Button (Touch target optimized) -->
+                <button id="theme-toggle" class="p-3 rounded-full bg-slate-200/50 dark:bg-slate-800/50 hover:scale-105 transition-transform min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Toggle Theme">
+                    <span id="theme-toggle-light-icon" class="hidden text-amber-500 text-lg">☀️</span>
+                    <span id="theme-toggle-dark-icon" class="hidden text-indigo-400 text-lg">🌙</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container wrapping contents with transparent layered style -->
+    <div class="relative z-10 w-full flex flex-col flex-grow">
+
+        <!-- Hero Section -->
+        <header class="relative overflow-hidden py-20 lg:py-32 border-b border-slate-200/30 dark:border-slate-800/30">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+                <span class="inline-block px-4 py-1.5 mb-6 text-xs font-semibold tracking-widest text-brand-primary uppercase bg-blue-100/60 dark:bg-blue-950/40 dark:text-blue-300 rounded-full backdrop-blur-sm">My Dream Destination</span>
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight mb-6 leading-tight drop-shadow-sm">
+                    배움에서 휴식으로,<br class="block sm:hidden"> 꿈꿔왔던 순간을 그리다
+                </h1>
+                <p class="max-w-2xl mx-auto text-base sm:text-lg text-slate-600 dark:text-slate-300 mb-10 leading-relaxed drop-shadow-sm">
+                    나만을 위한 특별한 공간 "I AM"에서, 미국·스위스·아이슬란드·이탈리아로 이어지는 4가지 매력적인 버킷리스트를 설계하고, 나만의 여행 스타일 진단과 실시간 트래블 포인트 성장 판타지를 체험해보세요.
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center gap-4 max-w-md mx-auto sm:max-w-none">
+                    <button onclick="scrollToSection('checklist-section')" class="px-8 py-4 rounded-full bg-brand-primary text-white font-bold hover:bg-blue-600 shadow-lg shadow-blue-500/20 hover:scale-105 transition-all text-sm sm:text-base">
+                        📋 버킷리스트 트래커
+                    </button>
+                    <button onclick="scrollToSection('quiz-section')" class="px-8 py-4 rounded-full bg-slate-200/80 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 font-bold hover:bg-slate-300 dark:hover:bg-slate-700 hover:scale-105 transition-all text-sm sm:text-base backdrop-blur-sm">
+                        🧠 여행 스타일 진단
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Intro Section -->
+        <section class="py-16 border-b border-slate-200/30 dark:border-slate-800/30">
+            <div class="max-w-4xl mx-auto px-4 text-center">
+                <h2 class="text-2xl sm:text-3xl font-bold mb-6">내가 꿈꾸는 여행은 어떤 모습일까?</h2>
+                <p class="text-slate-600 dark:text-slate-400 leading-relaxed mb-8 max-w-3xl mx-auto text-sm sm:text-base">
+                    단순히 '가고 싶다'는 마음에 머물지 않고 구체적인 버킷 리스트를 조각하며, 목적지에 도착해 웃고 있을 내 모습을 상상해 봅니다. 끝없는 로드트립의 낭만부터 극광의 오로라 아래 서 있는 전율을 한 지면에 수놓았습니다.
+                </p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
+                    <div class="p-4 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md rounded-2xl border border-slate-200/30 dark:border-slate-800/30">
+                        <span class="text-2xl block mb-1">🇺🇸</span>
+                        <span class="font-bold text-sm block">자유와 도전</span>
+                    </div>
+                    <div class="p-4 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md rounded-2xl border border-slate-200/30 dark:border-slate-800/30">
+                        <span class="text-2xl block mb-1">🇨🇭</span>
+                        <span class="font-bold text-sm block">평온과 안식</span>
+                    </div>
+                    <div class="p-4 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md rounded-2xl border border-slate-200/30 dark:border-slate-800/30">
+                        <span class="text-2xl block mb-1">🇮🇸</span>
+                        <span class="font-bold text-sm block">미지의 경외</span>
+                    </div>
+                    <div class="p-4 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md rounded-2xl border border-slate-200/30 dark:border-slate-800/30">
+                        <span class="text-2xl block mb-1">🇮🇹</span>
+                        <span class="font-bold text-sm block">예술과 풍미</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Destinations Section -->
+        <section id="destinations-section" class="py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl sm:text-4xl font-extrabold mb-4">4대 꿈의 목적지 가이드</h2>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm sm:text-base">버킷리스트의 영혼을 울리는 명소들을 찜해보세요.</p>
+                </div>
+
+                <!-- Destinations Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <!-- USA -->
+                    <div class="group relative bg-white/50 dark:bg-slate-900/50 backdrop-blur-md rounded-3xl border border-slate-200/30 dark:border-slate-800/30 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 flex flex-col justify-between overflow-hidden">
+                        <div>
+                            <div class="relative w-full aspect-[4/3] overflow-hidden bg-slate-200">
+                                <img src="https://images.unsplash.com/photo-1501594907352-04cda38ebc29?auto=format&fit=crop&w=600&q=80" alt="미국" onerror="this.onerror=null; this.src='https://placehold.co/600x450/3b82f6/ffffff?text=USA';" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                <button onclick="toggleLike('usa', event)" class="absolute top-3 right-3 p-3 rounded-full bg-white/80 dark:bg-slate-800/85 backdrop-blur-sm shadow-md hover:scale-110 transition-transform min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Like USA">
+                                    <span id="like-usa-icon" class="text-xl text-slate-400 dark:text-slate-500 hover:text-brand-accent transition-colors">🤍</span>
+                                </button>
+                            </div>
+                            <div class="p-6">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-xl">🇺🇸</span>
+                                    <span class="text-xs font-semibold tracking-wider uppercase text-blue-500">미국</span>
+                                </div>
+                                <h3 class="text-lg font-bold mb-2">광활한 대륙의 로드트립</h3>
+                                <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-3">
+                                    샌프란시스코의 상징인 금문교를 자전거로 건너고, 끝없이 뻗은 애리조나주의 66번 국도를 가로지르며 영화 같은 자유를 품어봅니다.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="p-6 pt-0">
+                            <button onclick="openModal('usa')" class="w-full py-3 bg-slate-200/60 dark:bg-slate-800/60 text-slate-800 dark:text-slate-200 rounded-2xl font-bold hover:bg-brand-primary hover:text-white dark:hover:bg-brand-primary transition-all text-xs sm:text-sm">
+                                알아보기 <i class="fa-solid fa-arrow-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Switzerland -->
+                    <div class="group relative bg-white/50 dark:bg-slate-900/50 backdrop-blur-md rounded-3xl border border-slate-200/30 dark:border-slate-800/30 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 flex flex-col justify-between overflow-hidden">
+                        <div>
+                            <div class="relative w-full aspect-[4/3] overflow-hidden bg-slate-200">
+                                <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=600&q=80" alt="스위스" onerror="this.onerror=null; this.src='https://placehold.co/600x450/10b981/ffffff?text=Switzerland';" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                <button onclick="toggleLike('switzerland', event)" class="absolute top-3 right-3 p-3 rounded-full bg-white/80 dark:bg-slate-800/85 backdrop-blur-sm shadow-md hover:scale-110 transition-transform min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Like Switzerland">
+                                    <span id="like-switzerland-icon" class="text-xl text-slate-400 dark:text-slate-500 hover:text-brand-accent transition-colors">🤍</span>
+                                </button>
+                            </div>
+                            <div class="p-6">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-xl">🇨🇭</span>
+                                    <span class="text-xs font-semibold tracking-wider uppercase text-blue-500">스위스</span>
+                                </div>
+                                <h3 class="text-lg font-bold mb-2">알프스 청정 자연의 쉼</h3>
+                                <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-3">
+                                    마테호른의 날카로운 설경 침봉을 바라보고, 기차가 알프스 산맥을 천천히 오를 때 차창 밖으로 비치는 에메랄드 동화마을에 취해봅니다.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="p-6 pt-0">
+                            <button onclick="openModal('switzerland')" class="w-full py-3 bg-slate-200/60 dark:bg-slate-800/60 text-slate-800 dark:text-slate-200 rounded-2xl font-bold hover:bg-brand-primary hover:text-white dark:hover:bg-brand-primary transition-all text-xs sm:text-sm">
+                                알아보기 <i class="fa-solid fa-arrow-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Iceland -->
+                    <div class="group relative bg-white/50 dark:bg-slate-900/50 backdrop-blur-md rounded-3xl border border-slate-200/30 dark:border-slate-800/30 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 flex flex-col justify-between overflow-hidden">
+                        <div>
+                            <div class="relative w-full aspect-[4/3] overflow-hidden bg-slate-200">
+                                <img src="https://images.unsplash.com/photo-1529963183134-61a90db47eaf?auto=format&fit=crop&w=600&q=80" alt="아이슬란드" onerror="this.onerror=null; this.src='https://placehold.co/600x450/6366f1/ffffff?text=Iceland';" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                <button onclick="toggleLike('iceland', event)" class="absolute top-3 right-3 p-3 rounded-full bg-white/80 dark:bg-slate-800/85 backdrop-blur-sm shadow-md hover:scale-110 transition-transform min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Like Iceland">
+                                    <span id="like-iceland-icon" class="text-xl text-slate-400 dark:text-slate-500 hover:text-brand-accent transition-colors">🤍</span>
+                                </button>
+                            </div>
+                            <div class="p-6">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-xl">🇮🇸</span>
+                                    <span class="text-xs font-semibold tracking-wider uppercase text-blue-500">아이슬란드</span>
+                                </div>
+                                <h3 class="text-lg font-bold mb-2">얼음과 불이 공존하는 대지</h3>
+                                <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-3">
+                                    어두운 대지 위를 가득 메우며 춤추는 신비로운 녹색 오로라와 블루라군에서 마주하는 뜨거운 모험까지, 지구 내부의 박동을 듣습니다.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="p-6 pt-0">
+                            <button onclick="openModal('iceland')" class="w-full py-3 bg-slate-200/60 dark:bg-slate-800/60 text-slate-800 dark:text-slate-200 rounded-2xl font-bold hover:bg-brand-primary hover:text-white dark:hover:bg-brand-primary transition-all text-xs sm:text-sm">
+                                알아보기 <i class="fa-solid fa-arrow-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Italy -->
+                    <div class="group relative bg-white/50 dark:bg-slate-900/50 backdrop-blur-md rounded-3xl border border-slate-200/30 dark:border-slate-800/30 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 flex flex-col justify-between overflow-hidden">
+                        <div>
+                            <div class="relative w-full aspect-[4/3] overflow-hidden bg-slate-200">
+                                <img src="https://t1.daumcdn.net/brunch/service/user/13f9/image/FVH_--VOPV2Y3GQP_SgaAPWDkUM.jpg" alt="이탈리아" onerror="this.onerror=null; this.src='https://placehold.co/600x450/f59e0b/ffffff?text=Italy';" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                <button onclick="toggleLike('italy', event)" class="absolute top-3 right-3 p-3 rounded-full bg-white/80 dark:bg-slate-800/85 backdrop-blur-sm shadow-md hover:scale-110 transition-transform min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Like Italy">
+                                    <span id="like-italy-icon" class="text-xl text-slate-400 dark:text-slate-500 hover:text-brand-accent transition-colors">🤍</span>
+                                </button>
+                            </div>
+                            <div class="p-6">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-xl">🇮🇹</span>
+                                    <span class="text-xs font-semibold tracking-wider uppercase text-blue-500">이탈리아</span>
+                                </div>
+                                <h3 class="text-lg font-bold mb-2">르네상스의 향기와 미식</h3>
+                                <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-3">
+                                    찬란하게 빛나던 로마 콜로세움 유적지를 지나, 로컬 골목 마르게리타 피자를 즐기며 베네치아 수로 위에서 낭만의 정취를 공유합니다.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="p-6 pt-0">
+                            <button onclick="openModal('italy')" class="w-full py-3 bg-slate-200/60 dark:bg-slate-800/60 text-slate-800 dark:text-slate-200 rounded-2xl font-bold hover:bg-brand-primary hover:text-white dark:hover:bg-brand-primary transition-all text-xs sm:text-sm">
+                                알아보기 <i class="fa-solid fa-arrow-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bucket List Checklist Section (Gamification 고도화) -->
+        <section id="checklist-section" class="py-20 border-t border-b border-slate-200/30 dark:border-slate-800/30">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-extrabold mb-4">트래블 포인트(TP) 성장 시스템</h2>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm sm:text-base">액티비티를 체크하고 포인트를 쌓아 최고 티어에 도전하세요! (퀴즈 완료 시 300 TP 추가)</p>
+                </div>
+
+                <!-- Global Progress Bar with Point System -->
+                <div class="bg-white/40 dark:bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-slate-200/30 dark:border-slate-800/30 mb-10 shadow-inner">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-3">
+                        <span class="text-base font-bold flex items-center gap-2">
+                            ⭐ 누적 포인트: <span id="tp-counter" class="text-xl font-extrabold text-brand-primary">0 TP</span>
+                        </span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-slate-400">나의 여행 등급 :</span>
+                            <span id="tier-badge" class="px-3 py-1 text-xs font-bold rounded-full transition-all duration-300 shadow-sm border border-slate-300 dark:border-slate-700 bg-slate-200 text-slate-700">
+                                🥉 브론즈 노마드
+                            </span>
+                        </div>
+                    </div>
+                    <div class="w-full bg-slate-200/50 dark:bg-slate-800/50 rounded-full h-4 overflow-hidden relative">
+                        <div id="tp-progress-bar" class="bg-gradient-to-r from-brand-primary to-brand-accent h-full rounded-full transition-all duration-500" style="width: 0%;"></div>
+                    </div>
+                    <p id="tier-hint-text" class="text-xs text-slate-500 dark:text-slate-400 mt-2 text-right">체크 한 건당 100 TP가 지급되며, 1500 TP 달성 시 플래티넘 축전이 펼쳐집니다!</p>
+                </div>
+
+                <!-- Country Checklist Groups -->
+                <div class="space-y-6">
+                    <!-- USA Checklist -->
+                    <div class="border border-slate-200/30 dark:border-slate-800/30 rounded-2xl overflow-hidden shadow-sm bg-white/20 dark:bg-slate-900/20 backdrop-blur-md">
+                        <div class="bg-slate-100/50 dark:bg-slate-800/50 px-6 py-4 flex items-center justify-between border-b border-slate-200/30 dark:border-slate-800/30">
+                            <span class="font-bold flex items-center gap-2 text-sm sm:text-base">🇺🇸 미국의 무한한 자유</span>
+                            <span id="count-usa" class="text-xs bg-brand-primary/10 text-brand-primary px-3 py-1 rounded-full font-semibold">0/3</span>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <label class="flex items-start gap-3 cursor-pointer group">
+                                <input type="checkbox" id="item-usa-1" onchange="updateChecklist()" class="w-5 h-5 rounded border-slate-300 text-brand-primary focus:ring-brand-primary mt-1 min-w-[20px]">
+                                <div class="select-none">
+                                    <span class="font-semibold block group-hover:text-brand-primary transition-colors text-xs sm:text-sm">애리조나 66번 국도 일몰 주행하기 (+100 TP)</span>
+                                    <span class="text-xs text-slate-500 dark:text-slate-400">황량하지만 뜨거운 서부 개척지의 영혼을 느낄 수 있는 대표 로드트립</span>
+                                </div>
+                            </label>
+                            <label class="flex items-start gap-3 cursor-pointer group">
+                                <input type="checkbox" id="item-usa-2" onchange="updateChecklist()" class="w-5 h-5 rounded border-slate-300 text-brand-primary focus:ring-brand-primary mt-1 min-w-[20px]">
+                                <div class="select-none">
+                                    <span class="font-semibold block group-hover:text-brand-primary transition-colors text-xs sm:text-sm">브로드웨이 오리지널 1열에서 뮤지컬 감상하기 (+100 TP)</span>
+                                    <span class="text-xs text-slate-500 dark:text-slate-400">화려한 네온사인 숲 타임스퀘어 중심에서 마주하는 연극과 음악의 전율</span>
+                                </div>
+                            </label>
+                            <label class="flex items-start gap-3 cursor-pointer group">
+                                <input type="checkbox" id="item-usa-3" onchange="updateChecklist()" class="w-5 h-5 rounded border-slate-300 text-brand-primary focus:ring-brand-primary mt-1 min-w-[20px]">
+                                <div class="select-none">
+                                    <span class="font-semibold block group-hover:text-brand-primary transition-colors text-xs sm:text-sm">라스베이거스 벨라지오 분수 쇼 직관하기 (+100 TP)</span>
+                                    <span class="text-xs text-slate-500 dark:text-slate-400">음악의 템포에 맞춰 거대하게 솟구치며 춤추는 거대한 물줄기의 예술</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Switzerland Checklist -->
+                    <div class="border border-slate-200/30 dark:border-slate-800/30 rounded-2xl overflow-hidden shadow-sm bg-white/20 dark:bg-slate-900/20 backdrop-blur-md">
+                        <div class="bg-slate-100/50 dark:bg-slate-800/50 px-6 py-4 flex items-center justify-between border-b border-slate-200/30 dark:border-slate-800/30">
+                            <span class="font-bold flex items-center gap-2 text-sm sm:text-base">🇨🇭 스위스의 청정 안식</span>
+                            <span id="count-switzerland" class="text-xs bg-brand-primary/10 text-brand-primary px-3 py-1 rounded-full font-semibold">0/3</span>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <label class="flex items-start gap-3 cursor-pointer group">
+                                <input type="checkbox" id="item-switzerland-1" onchange="updateChecklist()" class="w-5 h-5 rounded border-slate-300 text-brand-primary focus:ring-brand-primary mt-1 min-w-[20px]">
+                                <div class="select-none">
+                                    <span class="font-semibold block group-hover:text-brand-primary transition-colors text-xs sm:text-sm">산악 열차 차창 너머로 알프스 전경 영접하기 (+100 TP)</span>
+                                    <span class="text-xs text-slate-500 dark:text-slate-400">동화 속에 들어온 듯한 에메랄드 벌판과 만년설을 마주하는 기차 힐링</span>
+                                </div>
+                            </label>
+                            <label class="flex items-start gap-3 cursor-pointer group">
+                                <input type="checkbox" id="item-switzerland-2" onchange="updateChecklist()" class="w-5 h-5 rounded border-slate-300 text-brand-primary focus:ring-brand-primary mt-1 min-w-[20px]">
+                                <div class="select-none">
+                                    <span class="font-semibold block group-hover:text-brand-primary transition-colors text-xs sm:text-sm">마테호른 영접 후 원조 스위스 치즈 퐁듀 맛보기 (+100 TP)</span>
+                                    <span class="text-xs text-slate-500 dark:text-slate-400">뾰족한 토블론 초콜릿의 모티브 설산을 정면에 두고 깊고 풍부한 맛보기</span>
+                                </div>
+                            </label>
+                            <label class="flex items-start gap-3 cursor-pointer group">
+                                <input type="checkbox" id="item-switzerland-3" onchange="updateChecklist()" class="w-5 h-5 rounded border-slate-300 text-brand-primary focus:ring-brand-primary mt-1 min-w-[20px]">
+                                <div class="select-none">
+                                    <span class="font-semibold block group-hover:text-brand-primary transition-colors text-xs sm:text-sm">인터라켄 호수 상공에서 패러글라이딩 즐기기 (+100 TP)</span>
+                                    <span class="text-xs text-slate-500 dark:text-slate-400">하늘에서 산맥과 두 개의 눈부신 에메랄드 호수를 동시에 발아래에 두는 전율</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Iceland Checklist -->
+                    <div class="border border-slate-200/30 dark:border-slate-800/30 rounded-2xl overflow-hidden shadow-sm bg-white/20 dark:bg-slate-900/20 backdrop-blur-md">
+                        <div class="bg-slate-100/50 dark:bg-slate-800/50 px-6 py-4 flex items-center justify-between border-b border-slate-200/30 dark:border-slate-800/30">
+                            <span class="font-bold flex items-center gap-2 text-sm sm:text-base">🇮🇸 아이슬란드의 초자연</span>
+                            <span id="count-iceland" class="text-xs bg-brand-primary/10 text-brand-primary px-3 py-1 rounded-full font-semibold">0/3</span>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <label class="flex items-start gap-3 cursor-pointer group">
+                                <input type="checkbox" id="item-iceland-1" onchange="updateChecklist()" class="w-5 h-5 rounded border-slate-300 text-brand-primary focus:ring-brand-primary mt-1 min-w-[20px]">
+                                <div class="select-none">
+                                    <span class="font-semibold block group-hover:text-brand-primary transition-colors text-xs sm:text-sm">설산 한복판에서 춤추는 그린 오로라 조우하기 (+100 TP)</span>
+                                    <span class="text-xs text-slate-500 dark:text-slate-400">하늘을 영롱하게 덧칠하는 녹색 오로라의 군무, 일생일대의 버킷리스트</span>
+                                </div>
+                            </label>
+                            <label class="flex items-start gap-3 cursor-pointer group">
+                                <input type="checkbox" id="item-iceland-2" onchange="updateChecklist()" class="w-5 h-5 rounded border-slate-300 text-brand-primary focus:ring-brand-primary mt-1 min-w-[20px]">
+                                <div class="select-none">
+                                    <span class="font-semibold block group-hover:text-brand-primary transition-colors text-xs sm:text-sm">우윳빛 블루라군 야외 천연 온천에서 피로 풀기 (+100 TP)</span>
+                                    <span class="text-xs text-slate-500 dark:text-slate-400">차가운 야외 대기 속에서 온천수에 몸을 맡긴 채 지구의 평화를 탐닉</span>
+                                </div>
+                            </label>
+                            <label class="flex items-start gap-3 cursor-pointer group">
+                                <input type="checkbox" id="item-iceland-3" onchange="updateChecklist()" class="w-5 h-5 rounded border-slate-300 text-brand-primary focus:ring-brand-primary mt-1 min-w-[20px]">
+                                <div class="select-none">
+                                    <span class="font-semibold block group-hover:text-brand-primary transition-colors text-xs sm:text-sm">태초의 영롱함을 간직한 크리스탈 빙하 동굴 탐험 (+100 TP)</span>
+                                    <span class="text-xs text-slate-500 dark:text-slate-400">수천 년간 응축된 원초적이고 새파란 얼음의 숲 속을 거니는 극강의 어드벤처</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Italy Checklist -->
+                    <div class="border border-slate-200/30 dark:border-slate-800/30 rounded-2xl overflow-hidden shadow-sm bg-white/20 dark:bg-slate-900/20 backdrop-blur-md">
+                        <div class="bg-slate-100/50 dark:bg-slate-800/50 px-6 py-4 flex items-center justify-between border-b border-slate-200/30 dark:border-slate-800/30">
+                            <span class="font-bold flex items-center gap-2 text-sm sm:text-base">🇮🇹 이탈리아의 찬란한 숨결</span>
+                            <span id="count-italy" class="text-xs bg-brand-primary/10 text-brand-primary px-3 py-1 rounded-full font-semibold">0/3</span>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <label class="flex items-start gap-3 cursor-pointer group">
+                                <input type="checkbox" id="item-italy-1" onchange="updateChecklist()" class="w-5 h-5 rounded border-slate-300 text-brand-primary focus:ring-brand-primary mt-1 min-w-[20px]">
+                                <div class="select-none">
+                                    <span class="font-semibold block group-hover:text-brand-primary transition-colors text-xs sm:text-sm">트레비 분수에 로마 재방문을 기원하며 동전 던지기 (+100 TP)</span>
+                                    <span class="text-xs text-slate-500 dark:text-slate-400">영화 속 한 장면의 시그니처 행동처럼 가볍게 등 뒤로 소원을 던져보는 낭만</span>
+                                </div>
+                            </label>
+                            <label class="flex items-start gap-3 cursor-pointer group">
+                                <input type="checkbox" id="item-italy-2" onchange="updateChecklist()" class="w-5 h-5 rounded border-slate-300 text-brand-primary focus:ring-brand-primary mt-1 min-w-[20px]">
+                                <div class="select-none">
+                                    <span class="font-semibold block group-hover:text-brand-primary transition-colors text-xs sm:text-sm">나폴리식 정통 화덕 피자 마르게리타 현지 흡입 (+100 TP)</span>
+                                    <span class="text-xs text-slate-500 dark:text-slate-400">바삭하면서 쫄깃한 최적의 도우와 고소하게 흘러내리는 현지산 치즈의 절묘한 케미</span>
+                                </div>
+                            </label>
+                            <label class="flex items-start gap-3 cursor-pointer group">
+                                <input type="checkbox" id="item-italy-3" onchange="updateChecklist()" class="w-5 h-5 rounded border-slate-300 text-brand-primary focus:ring-brand-primary mt-1 min-w-[20px]">
+                                <div class="select-none">
+                                    <span class="font-semibold block group-hover:text-brand-primary transition-colors text-xs sm:text-sm">베네치아 미로 같은 운하 위에서 곤돌라 만끽하기 (+100 TP)</span>
+                                    <span class="text-xs text-slate-500 dark:text-slate-400">물 위에 피어난 유서 깊은 수상도시 건물 사이를 수놓는 세레나데 감상</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Travel Style Quiz Section -->
+        <section id="quiz-section" class="py-20">
+            <div class="max-w-3xl mx-auto px-4 sm:px-6">
+                <div class="bg-white/40 dark:bg-slate-900/50 backdrop-blur-md rounded-3xl p-8 border border-slate-200/30 dark:border-slate-800/30 shadow-xl relative overflow-hidden">
+                    <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-brand-primary/10"></div>
+                    
+                    <div id="quiz-intro" class="text-center">
+                        <span class="text-3xl block mb-3">🧩</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold mb-4">나의 여행 스타일 진단기</h2>
+                        <p class="text-slate-500 dark:text-slate-400 mb-8 leading-relaxed text-sm sm:text-base">
+                            작은 선호도 선택의 차이가 당신이 가장 절실히 원하는 여행의 테마를 말해줍니다.<br>가벼운 3가지 질문을 풀면 딱 맞는 꿈의 행선지가 결정됩니다. (퀴즈 완성 시 +300 TP)
+                        </p>
+                        <button onclick="startQuiz()" class="px-8 py-4 rounded-2xl bg-brand-primary hover:bg-blue-600 text-white font-bold transition-all shadow-md text-sm sm:text-base">
+                            진단 시작하기
+                        </button>
+                    </div>
+
+                    <!-- Quiz Main Area -->
+                    <div id="quiz-container" class="hidden">
+                        <div class="w-full bg-slate-200/50 dark:bg-slate-800/50 rounded-full h-2 mb-8">
+                            <div id="quiz-progress-indicator" class="bg-brand-primary h-2 rounded-full transition-all duration-300" style="width: 33.3%;"></div>
+                        </div>
+
+                        <h3 id="quiz-question" class="text-lg sm:text-xl font-bold mb-6 text-center">질문 내용</h3>
+                        
+                        <div id="quiz-answers" class="space-y-3">
+                            <!-- JS Inject -->
+                        </div>
+                    </div>
+
+                    <!-- Quiz Results Area -->
+                    <div id="quiz-result" class="hidden text-center py-6">
+                        <span class="text-5xl block mb-4" id="result-emoji">🇺🇸</span>
+                        <span class="text-xs font-bold tracking-widest text-brand-primary uppercase block mb-1">RECOMMENDATION</span>
+                        <h3 class="text-2xl font-black mb-4" id="result-title">미국 로드트립</h3>
+                        <p class="text-slate-600 dark:text-slate-300 mb-6 leading-relaxed max-w-md mx-auto text-sm sm:text-base" id="result-desc">
+                            자유와 도전을 사랑하는 모험의 아이콘!
+                        </p>
+                        <div class="flex flex-col sm:flex-row justify-center gap-3">
+                            <button onclick="restartQuiz()" class="px-6 py-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-all text-xs sm:text-sm font-semibold">
+                                다시 테스트하기
+                            </button>
+                            <button id="result-action-btn" onclick="scrollToSection('destinations-section')" class="px-6 py-3 rounded-xl bg-brand-primary text-white hover:bg-blue-600 transition-all text-xs sm:text-sm font-semibold">
+                                추천 버킷 탐색하기
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Guestbook Section (새로고침 보존 방명록 - 3-1 구현) -->
+        <section id="guestbook-section" class="py-20 border-t border-slate-200/30 dark:border-slate-800/30">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-extrabold mb-4">✈️ 여행자 방명록</h2>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm sm:text-base">이 공간을 방문해 주신 다른 탐험가들의 발자취와 따뜻한 메시지를 남겨보세요.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <!-- Write Guestbook Form -->
+                    <div class="md:col-span-1 bg-white/40 dark:bg-slate-900/50 backdrop-blur-md p-6 rounded-2xl border border-slate-200/30 dark:border-slate-800/30 h-fit shadow-sm">
+                        <h3 class="text-lg font-bold mb-4 flex items-center gap-2">✍️ 한 마디 쓰기</h3>
+                        <form id="guestbook-form" onsubmit="handleGuestbookSubmit(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase mb-1">작성자 닉네임</label>
+                                <input type="text" id="gb-nickname" required placeholder="예: 구름모험가" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/40 focus:ring-2 focus:ring-brand-primary focus:outline-none text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase mb-1">나의 여행 성향 이모지</label>
+                                <div class="grid grid-cols-4 gap-2">
+                                    <button type="button" onclick="selectEmoji('🚗')" class="emoji-btn p-2 text-xl rounded-xl border border-slate-200 dark:border-slate-800 bg-white/30 hover:bg-brand-primary/10 transition-all">🚗</button>
+                                    <button type="button" onclick="selectEmoji('🏔️')" class="emoji-btn p-2 text-xl rounded-xl border border-slate-200 dark:border-slate-800 bg-white/30 hover:bg-brand-primary/10 transition-all">🏔️</button>
+                                    <button type="button" onclick="selectEmoji('🌌')" class="emoji-btn p-2 text-xl rounded-xl border border-slate-200 dark:border-slate-800 bg-white/30 hover:bg-brand-primary/10 transition-all">🌌</button>
+                                    <button type="button" onclick="selectEmoji('🍕')" class="emoji-btn p-2 text-xl rounded-xl border border-slate-200 dark:border-slate-800 bg-white/30 hover:bg-brand-primary/10 transition-all">🍕</button>
+                                </div>
+                                <input type="hidden" id="gb-emoji" value="🚗">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase mb-1">메시지 내용</label>
+                                <textarea id="gb-message" required rows="3" placeholder="버킷리스트 응원 글이나 좋아하는 장소를 적어주세요!" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/40 focus:ring-2 focus:ring-brand-primary focus:outline-none text-sm resize-none"></textarea>
+                            </div>
+                            <button type="submit" class="w-full py-3 bg-brand-primary hover:bg-blue-600 text-white font-bold rounded-xl shadow-md text-xs sm:text-sm transition-all">
+                                방명록 등록하기
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Messages List -->
+                    <div class="md:col-span-2 space-y-4">
+                        <h3 class="text-lg font-bold flex items-center justify-between">
+                            <span>💬 작성된 이야기들 (<span id="gb-count">0</span>)</span>
+                            <button onclick="clearAllGuestbook()" class="text-xs text-red-500 hover:underline">전체 초기화</button>
+                        </h3>
+                        <div id="guestbook-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[460px] overflow-y-auto pr-1">
+                            <!-- Dynamic Content -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-auto py-12 border-t border-slate-200/30 dark:border-slate-800/30 transition-colors duration-300 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-sm text-slate-500 dark:text-slate-500 mb-2">
+                © 2026 I AM Travel Bucket. Designed for dream explorers.
+            </p>
+            <p class="text-xs text-slate-400 dark:text-slate-600">
+                본 사이트는 Vanilla JS로 고도화된 여행 버킷리스트 쇼케이스 공간입니다.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Detailed Destination Modal Dialog -->
+    <div id="detail-modal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div onclick="closeModal()" class="fixed inset-0 transition-opacity bg-slate-900/80 backdrop-blur-sm" aria-hidden="true"></div>
+
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div id="modal-card" class="relative inline-block align-bottom bg-white dark:bg-slate-900 rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full opacity-0 scale-95 duration-300">
+                <!-- Touch target optimized Close button (Touch target 44px) -->
+                <button onclick="closeModal()" class="absolute top-4 right-4 z-10 p-3 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-full bg-slate-200/50 dark:bg-slate-800/50 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Close modal">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+
+                <!-- Hero Header in Modal -->
+                <div class="relative h-64 sm:h-80 w-full overflow-hidden">
+                    <img id="modal-image" src="" alt="" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
+                    <div class="absolute bottom-6 left-6">
+                        <span id="modal-emoji" class="text-3xl block mb-1">🇺🇸</span>
+                        <h3 id="modal-title" class="text-2xl sm:text-3xl font-black text-white">미국</h3>
+                        <p id="modal-tagline" class="text-sm text-slate-300 mt-1"></p>
+                    </div>
+                </div>
+
+                <!-- Body Content in Modal -->
+                <div class="p-6 space-y-6">
+                    <div>
+                        <h4 class="text-xs font-bold text-brand-primary uppercase tracking-wider mb-2">여행 브리핑</h4>
+                        <p id="modal-summary" class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed"></p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                        <div class="p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-900/40">
+                            <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase block mb-1 font-semibold">최적의 여행 시즌</span>
+                            <span id="modal-season" class="text-sm font-bold">5월 ~ 10월</span>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-900/40">
+                            <span class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase block mb-1 font-semibold">꼭 먹어봐야 할 미식</span>
+                            <span id="modal-food" class="text-sm font-bold">원조 크래프트 맥주 & 버거</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer in Modal -->
+                <div class="p-6 pt-0 flex justify-end gap-3">
+                    <button onclick="closeModal()" class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs sm:text-sm font-bold transition-all">
+                        닫기
+                    </button>
+                    <button id="modal-explore-btn" class="px-5 py-2.5 rounded-xl bg-brand-primary text-white hover:bg-blue-600 text-xs sm:text-sm font-bold transition-all">
+                        목적지 자세히 보기
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confetti Particle Overlay for Milestone Celebrations -->
+    <canvas id="confetti-canvas" class="fixed inset-0 z-50 pointer-events-none hidden"></canvas>
+
+    <!-- Vanilla JS Logic -->
+    <script>
+        // Core Destination Data Structure
+        const destinations = {
+            usa: {
+                name: '미국',
+                emoji: '🇺🇸',
+                tagline: '광활함과 끝없는 개척정신',
+                image: 'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?auto=format&fit=crop&w=600&q=80',
+                season: '4월 ~ 6월, 9월 ~ 11월 (봄, 가을)',
+                food: '인앤아웃 더블더블 & 리얼 뉴욕피자',
+                summary: '금문교를 자전거로 횡단하는 낭만, 영화 같은 사막 66번 국도 횡단, 그리고 화려함의 극치 브로드웨이가 살아 숨 쉬는 활력의 대륙입니다.'
+            },
+            switzerland: {
+                name: '스위스',
+                emoji: '🇨🇭',
+                tagline: '알프스가 감싼 지상낙원',
+                image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=600&q=80',
+                season: '6월 ~ 9월 (따뜻한 야생화 시즌)',
+                food: '그뤼예르 치즈 퐁듀 & 뢰스티',
+                summary: '웅장하고 신비로운 톱니바퀴 열차를 타고 만년설 산들을 여행하며 평생 잊지 못할 청정 공기와 스위스풍 호수 경관을 마음속에 담는 완벽한 안식처입니다.'
+            },
+            iceland: {
+                name: '아이슬란드',
+                emoji: '🇮🇸',
+                tagline: '오로라가 하늘을 뒤덮는 얼음과 불의 섬',
+                image: 'https://images.unsplash.com/photo-1529963183134-61a90db47eaf?auto=format&fit=crop&w=600&q=80',
+                season: '11월 ~ 2월 (오로라 극대기 겨울)',
+                food: '양고기 스프 & 신선한 대구 요리',
+                summary: '하늘을 뒤흔드는 초록빛 댄싱 오로라, 경이로운 빙하 동굴, 그리고 뜨거운 천연 온천 블루라군에서 힐링하며 지구의 시작을 관조하는 일생일대의 모험지입니다.'
+            },
+            italy: {
+                name: '이탈리아',
+                emoji: '🇮🇹',
+                tagline: '시간도 거스를 수 없는 문화와 미식의 거장',
+                image: 'https://t1.daumcdn.net/brunch/service/user/13f9/image/FVH_--VOPV2Y3GQP_SgaAPWDkUM.jpg',
+                season: '5월, 9월 ~ 10월 (화창하고 서늘함)',
+                food: '나폴리 마르게리타 & 피스타치오 젤라토',
+                summary: '중세 르네상스를 꽃피운 수많은 유적지, 대성당 앞 광장 벤치에서 즐기는 에스프레소 한 잔, 그리고 베네치아의 낭만적인 카날을 품은 최고의 감성 목적지입니다.'
+            }
+        };
+
+        // Quiz Question bank
+        const quizQuestions = [
+            {
+                q: "1. 가슴이 가장 뛰는 이상적인 풍경은 무엇인가요?",
+                answers: [
+                    { text: "🚗 지평선이 끝없이 뻗어있는 광활한 사막 국도", val: "usa" },
+                    { text: "🏔️ 만년설이 쌓여 눈이 시리게 깨끗한 산맥과 푸른 초원", val: "switzerland" },
+                    { text: "🌌 칠흑 같은 한겨울 하늘을 가득 채우는 은하수와 오로라", val: "iceland" },
+                    { text: "🍕 아름다운 대성당과 아기자기한 중세풍 수변 도로", val: "italy" }
+                ]
+            },
+            {
+                q: "2. 여행에서 당신에게 가장 치명적으로 중요한 우선순위는?",
+                answers: [
+                    { text: "자유로운 운전과 드넓은 공간감", val: "usa" },
+                    { text: "아무것도 생각하지 않는 청정하고 온전한 쉼", val: "switzerland" },
+                    { text: "미지 속에서 맞닥뜨리는 생생한 생태와 초자연", val: "iceland" },
+                    { text: "역사가 깃든 유적 탐사와 현지 원조 요리 격파", val: "italy" }
+                ]
+            },
+            {
+                q: "3. 만약 누군가 동행을 제안한다면 당신의 선택은?",
+                answers: [
+                    { text: "신나는 음악을 채운 캠핑 카에서 밤새 자유를 노래할 친구", val: "usa" },
+                    { text: "정겨운 야생 벌판 위에서 침묵하며 정취를 나눌 동반자", val: "switzerland" },
+                    { text: "지구 한계선에 함께 서서 탐험을 감내할 열정 가득한 듀오", val: "iceland" },
+                    { text: "골목길 미술관을 거닐며 미식 맛 평가를 토론할 미학 메이트", val: "italy" }
+                ]
+            }
+        ];
+
+        // States loaded from LocalStorage
+        let likedCountries = JSON.parse(localStorage.getItem('likedCountries')) || [];
+        let checkedActivities = JSON.parse(localStorage.getItem('checkedActivities')) || {};
+        let quizCompleted = localStorage.getItem('quizCompleted') === 'true';
+        let currentQuizIndex = 0;
+        let quizScores = { usa: 0, switzerland: 0, iceland: 0, italy: 0 };
+        let guestbookData = JSON.parse(localStorage.getItem('guestbookData')) || [];
+
+        // Dynamic Star Background Animation
+        const pCanvas = document.getElementById('particle-canvas');
+        const pCtx = pCanvas.getContext('2d');
+        let particles = [];
+        let isDarkMode = true;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            updateUIState();
+            updateChecklist(true); // Load checklist and set Points
+            initParticles();
+            renderGuestbook();
+            trackScroll();
+        });
+
+        // Toggle Dark/Light Mode
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+        const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+
+        function initTheme() {
+            const isDark = document.documentElement.classList.contains('dark') || 
+                           localStorage.getItem('color-theme') === 'dark' || 
+                           (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                themeToggleLightIcon.classList.remove('hidden');
+                themeToggleDarkIcon.classList.add('hidden');
+                isDarkMode = true;
+            } else {
+                document.documentElement.classList.remove('dark');
+                themeToggleDarkIcon.classList.remove('hidden');
+                themeToggleLightIcon.classList.add('hidden');
+                isDarkMode = false;
+            }
+            adjustEmojiBtnSelection();
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('color-theme', 'light');
+                themeToggleLightIcon.classList.add('hidden');
+                themeToggleDarkIcon.classList.remove('hidden');
+                isDarkMode = false;
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('color-theme', 'dark');
+                themeToggleLightIcon.classList.remove('hidden');
+                themeToggleDarkIcon.classList.add('hidden');
+                isDarkMode = true;
+            }
+            // Trigger particle transition styling
+            initParticles();
+        });
+
+        // Scroll track
+        window.addEventListener('scroll', trackScroll);
+
+        function trackScroll() {
+            const scrollProgress = document.getElementById('scroll-progress');
+            const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+            if (totalHeight > 0) {
+                const percentage = (window.pageYOffset / totalHeight) * 100;
+                scrollProgress.style.width = percentage + '%';
+            }
+        }
+
+        function scrollToSection(id) {
+            const target = document.getElementById(id);
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // Like handling
+        function toggleLike(id, event) {
+            if (event) event.stopPropagation();
+            const index = likedCountries.indexOf(id);
+            if (index > -1) {
+                likedCountries.splice(index, 1);
+            } else {
+                likedCountries.push(id);
+            }
+            localStorage.setItem('likedCountries', JSON.stringify(likedCountries));
+            updateUIState();
+        }
+
+        function updateUIState() {
+            const likeCountBadge = document.getElementById('like-count');
+            likeCountBadge.innerText = likedCountries.length;
+
+            ['usa', 'switzerland', 'iceland', 'italy'].forEach(id => {
+                const heartIcon = document.getElementById(`like-${id}-icon`);
+                if (heartIcon) {
+                    if (likedCountries.includes(id)) {
+                        heartIcon.innerText = '❤️';
+                        heartIcon.classList.remove('text-slate-400', 'dark:text-slate-500');
+                        heartIcon.classList.add('text-brand-accent');
+                    } else {
+                        heartIcon.innerText = '🤍';
+                        heartIcon.classList.remove('text-brand-accent');
+                        heartIcon.classList.add('text-slate-400', 'dark:text-slate-500');
+                    }
+                }
+            });
+        }
+
+        // Modal opening/closing
+        function openModal(id) {
+            const data = destinations[id];
+            if (!data) return;
+
+            document.getElementById('modal-image').src = data.image;
+            document.getElementById('modal-image').alt = data.name;
+            document.getElementById('modal-emoji').innerText = data.emoji;
+            document.getElementById('modal-title').innerText = data.name;
+            document.getElementById('modal-tagline').innerText = data.tagline;
+            document.getElementById('modal-summary').innerText = data.summary;
+            document.getElementById('modal-season').innerText = data.season;
+            document.getElementById('modal-food').innerText = data.food;
+
+            document.getElementById('modal-explore-btn').onclick = () => {
+                closeModal();
+                scrollToSection('checklist-section');
+            };
+
+            const modal = document.getElementById('detail-modal');
+            const card = document.getElementById('modal-card');
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                card.classList.remove('opacity-0', 'scale-95');
+                card.classList.add('opacity-100', 'scale-100');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('detail-modal');
+            const card = document.getElementById('modal-card');
+
+            card.classList.remove('opacity-100', 'scale-100');
+            card.classList.add('opacity-0', 'scale-95');
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // Points system & Tier logic (Gamification)
+        function updateChecklist(isInitial = false) {
+            const checkboxes = [
+                'item-usa-1', 'item-usa-2', 'item-usa-3',
+                'item-switzerland-1', 'item-switzerland-2', 'item-switzerland-3',
+                'item-iceland-1', 'item-iceland-2', 'item-iceland-3',
+                'item-italy-1', 'item-italy-2', 'item-italy-3'
+            ];
+
+            if (isInitial) {
+                checkboxes.forEach(key => {
+                    const chk = document.getElementById(key);
+                    if (chk && checkedActivities[key]) {
+                        chk.checked = true;
+                    }
+                });
+            } else {
+                checkboxes.forEach(key => {
+                    const chk = document.getElementById(key);
+                    if (chk) {
+                        checkedActivities[key] = chk.checked;
+                    }
+                });
+                localStorage.setItem('checkedActivities', JSON.stringify(checkedActivities));
+            }
+
+            // Calculation
+            let checkedCount = 0;
+            const scoreMap = { usa: 0, switzerland: 0, iceland: 0, italy: 0 };
+
+            checkboxes.forEach(key => {
+                const chk = document.getElementById(key);
+                if (chk && chk.checked) {
+                    checkedCount++;
+                    const country = key.split('-')[1];
+                    scoreMap[country] = (scoreMap[country] || 0) + 1;
+                }
+            });
+
+            // Subset label updates
+            document.getElementById('count-usa').innerText = `${scoreMap.usa}/3`;
+            document.getElementById('count-switzerland').innerText = `${scoreMap.switzerland}/3`;
+            document.getElementById('count-iceland').innerText = `${scoreMap.iceland}/3`;
+            document.getElementById('count-italy').innerText = `${scoreMap.italy}/3`;
+
+            // Point System calculation (Checklist item = 100 TP, Quiz completed = 300 TP)
+            let quizBonus = quizCompleted ? 300 : 0;
+            let currentPoints = (checkedCount * 100) + quizBonus;
+            const maxPoints = 1500; // 12 items * 100 + 300 Quiz Bonus
+
+            document.getElementById('tp-counter').innerText = `${currentPoints} TP`;
+            
+            const progressPercent = Math.min((currentPoints / maxPoints) * 100, 100);
+            document.getElementById('tp-progress-bar').style.width = `${progressPercent}%`;
+
+            // Tier Evaluation
+            let tierName = "🥉 브론즈 노마드";
+            let tierStyle = "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
+            let reachedMax = false;
+
+            if (currentPoints >= 1500) {
+                tierName = "👑 플래티넘 익스플로러";
+                tierStyle = "bg-gradient-to-r from-pink-500 to-rose-500 text-white animate-pulse border-pink-400";
+                reachedMax = true;
+            } else if (currentPoints >= 1000) {
+                tierName = "🥇 골드 트래블러";
+                tierStyle = "bg-amber-500 text-white border-amber-400";
+            } else if (currentPoints >= 500) {
+                tierName = "🥈 실버 어드벤처";
+                tierStyle = "bg-zinc-400 text-slate-900 border-zinc-300 dark:bg-zinc-700 dark:text-white";
+            }
+
+            const badge = document.getElementById('tier-badge');
+            badge.innerText = tierName;
+            badge.className = `px-3 py-1 text-xs font-bold rounded-full transition-all duration-300 shadow-sm border ${tierStyle}`;
+
+            // Trigger Fireworks/Confetti Celebration on Max tier
+            if (reachedMax && !isInitial && localStorage.getItem('confettiCelebrated') !== 'true') {
+                triggerConfetti();
+                localStorage.setItem('confettiCelebrated', 'true');
+            } else if (!reachedMax) {
+                localStorage.removeItem('confettiCelebrated');
+            }
+        }
+
+        // Quiz System
+        function startQuiz() {
+            document.getElementById('quiz-intro').classList.add('hidden');
+            document.getElementById('quiz-result').classList.add('hidden');
+            document.getElementById('quiz-container').classList.remove('hidden');
+            currentQuizIndex = 0;
+            quizScores = { usa: 0, switzerland: 0, iceland: 0, italy: 0 };
+            renderQuizQuestion();
+        }
+
+        function renderQuizQuestion() {
+            const currentQ = quizQuestions[currentQuizIndex];
+            document.getElementById('quiz-question').innerText = currentQ.q;
+            
+            const percent = ((currentQuizIndex + 1) / quizQuestions.length) * 100;
+            document.getElementById('quiz-progress-indicator').style.width = `${percent}%`;
+
+            const answersDiv = document.getElementById('quiz-answers');
+            answersDiv.innerHTML = '';
+
+            currentQ.answers.forEach(ans => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/30 dark:bg-slate-900/30 hover:border-brand-primary dark:hover:border-brand-primary hover:bg-slate-50 dark:hover:bg-slate-800 font-medium transition-colors text-xs sm:text-sm";
+                btn.innerText = ans.text;
+                btn.onclick = () => selectQuizAnswer(ans.val);
+                answersDiv.appendChild(btn);
+            });
+        }
+
+        function selectQuizAnswer(val) {
+            quizScores[val]++;
+            currentQuizIndex++;
+
+            if (currentQuizIndex < quizQuestions.length) {
+                renderQuizQuestion();
+            } else {
+                showQuizResult();
+            }
+        }
+
+        function showQuizResult() {
+            let bestMatch = 'usa';
+            let maxScore = -1;
+
+            for (const key in quizScores) {
+                if (quizScores[key] > maxScore) {
+                    maxScore = quizScores[key];
+                    bestMatch = key;
+                }
+            }
+
+            // Flag and award bonus TP
+            quizCompleted = true;
+            localStorage.setItem('quizCompleted', 'true');
+            updateChecklist();
+
+            const data = destinations[bestMatch];
+            
+            document.getElementById('quiz-container').classList.add('hidden');
+            document.getElementById('quiz-result').classList.remove('hidden');
+
+            document.getElementById('result-emoji').innerText = data.emoji;
+            document.getElementById('result-title').innerText = `${data.name} - ${data.tagline}`;
+            
+            let descriptiveRecommendation = '';
+            if (bestMatch === 'usa') {
+                descriptiveRecommendation = "지평선 끝까지 자동차를 달리며 개척하는 에너지를 채우고 싶은 당신, 광활함과 화려한 도심이 가득한 '미국'이 완벽한 운명의 선택지입니다! 보너스 300 TP가 지급되었습니다.";
+            } else if (bestMatch === 'switzerland') {
+                descriptiveRecommendation = "일상의 속도를 완전히 낮춘 뒤 알프스 청정 공기를 온전히 호흡하고 싶은 가드너형 감성의 소유자인 당신, 청량한 '스위스'로 당장 떠나야 합니다! 보너스 300 TP가 지급되었습니다.";
+            } else if (bestMatch === 'iceland') {
+                descriptiveRecommendation = "극지와 미지의 세상 한가운데에 서며 생태의 원형을 맞이하는 모험을 갈구하는 당신, 밤하늘을 일렁이는 '아이슬란드'가 운명의 조타수입니다! 보너스 300 TP가 지급되었습니다.";
+            } else if (bestMatch === 'italy') {
+                descriptiveRecommendation = "세기를 수놓은 깊고 아름다운 예술과 풍성하고 세련된 미식을 사랑하는 섬세한 로맨티시스트형 탐험가, '이탈리아'의 거리가 기다립니다! 보너스 300 TP가 지급되었습니다.";
+            }
+
+            document.getElementById('result-desc').innerText = descriptiveRecommendation;
+
+            document.getElementById('result-action-btn').onclick = () => {
+                scrollToSection('destinations-section');
+                setTimeout(() => {
+                    openModal(bestMatch);
+                }, 500);
+            };
+        }
+
+        function restartQuiz() {
+            startQuiz();
+        }
+
+        // Guestbook logic (3-1 구현)
+        function selectEmoji(emoji) {
+            document.getElementById('gb-emoji').value = emoji;
+            adjustEmojiBtnSelection();
+        }
+
+        function adjustEmojiBtnSelection() {
+            const currentEmoji = document.getElementById('gb-emoji').value;
+            const buttons = document.querySelectorAll('.emoji-btn');
+            buttons.forEach(btn => {
+                if (btn.innerText === currentEmoji) {
+                    btn.classList.add('border-brand-primary', 'bg-brand-primary/10');
+                } else {
+                    btn.classList.remove('border-brand-primary', 'bg-brand-primary/10');
+                }
+            });
+        }
+
+        function handleGuestbookSubmit(event) {
+            event.preventDefault();
+            const nickname = document.getElementById('gb-nickname').value.trim();
+            const emoji = document.getElementById('gb-emoji').value;
+            const message = document.getElementById('gb-message').value.trim();
+
+            if (!nickname || !message) return;
+
+            const newEntry = {
+                id: Date.now(),
+                nickname: nickname,
+                emoji: emoji,
+                message: message,
+                date: new Date().toLocaleDateString('ko-KR')
+            };
+
+            guestbookData.unshift(newEntry);
+            localStorage.setItem('guestbookData', JSON.stringify(guestbookData));
+
+            // Reset inputs
+            document.getElementById('gb-nickname').value = '';
+            document.getElementById('gb-message').value = '';
+            
+            renderGuestbook();
+        }
+
+        function renderGuestbook() {
+            const listContainer = document.getElementById('guestbook-list');
+            listContainer.innerHTML = '';
+            
+            document.getElementById('gb-count').innerText = guestbookData.length;
+
+            if (guestbookData.length === 0) {
+                listContainer.className = "flex flex-col items-center justify-center p-8 bg-white/20 dark:bg-slate-900/20 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 min-h-[150px] col-span-2 text-slate-400";
+                listContainer.innerHTML = `<span class="text-3xl mb-2">🎈</span><span class="text-xs">첫 방명록을 작성해 꿈을 나누어 보세요!</span>`;
+                return;
+            }
+
+            listContainer.className = "grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[460px] overflow-y-auto pr-1";
+
+            guestbookData.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = "bg-white/40 dark:bg-slate-950/40 backdrop-blur-md p-4 rounded-xl border border-slate-200/30 dark:border-slate-800/30 flex flex-col justify-between shadow-sm hover:scale-[1.02] transition-transform duration-300";
+                
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-2xl">${item.emoji}</span>
+                            <button onclick="deleteGuestbookEntry(${item.id})" class="text-slate-400 hover:text-red-500 p-1 min-w-[32px] min-h-[32px] flex items-center justify-center transition-colors" aria-label="Delete entry">
+                                <i class="fa-regular fa-trash-can text-sm"></i>
+                            </button>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed mb-3 whitespace-pre-wrap break-all">${item.message}</p>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px] text-slate-400 dark:text-slate-500 border-t border-slate-100 dark:border-slate-800 pt-2">
+                        <span class="font-bold">${item.nickname}</span>
+                        <span>${item.date}</span>
+                    </div>
+                `;
+                listContainer.appendChild(card);
+            });
+        }
+
+        function deleteGuestbookEntry(id) {
+            guestbookData = guestbookData.filter(item => item.id !== id);
+            localStorage.setItem('guestbookData', JSON.stringify(guestbookData));
+            renderGuestbook();
+        }
+
+        function clearAllGuestbook() {
+            if (confirm("정말로 작성된 모든 방명록을 초기화하시겠습니까?")) {
+                guestbookData = [];
+                localStorage.removeItem('guestbookData');
+                renderGuestbook();
+            }
+        }
+
+        // ---------------------------------------------
+        // Particle Engine & Celebrate Confetti
+        // ---------------------------------------------
+        function initParticles() {
+            pCanvas.width = window.innerWidth;
+            pCanvas.height = window.innerHeight;
+            particles = [];
+
+            // Reduce particle count on mobile for optimization
+            const density = window.innerWidth < 768 ? 40 : 100;
+
+            for (let i = 0; i < density; i++) {
+                particles.push({
+                    x: Math.random() * pCanvas.width,
+                    y: Math.random() * pCanvas.height,
+                    radius: Math.random() * 2 + 0.5,
+                    speedX: (Math.random() - 0.5) * 0.3,
+                    speedY: Math.random() * 0.5 + 0.1,
+                    alpha: Math.random()
+                });
+            }
+        }
+
+        window.addEventListener('resize', () => {
+            pCanvas.width = window.innerWidth;
+            pCanvas.height = window.innerHeight;
+            initParticles();
+        });
+
+        function animateParticles() {
+            pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
+
+            // Adaptive particle styling based on Dark/Light mode
+            pCtx.fillStyle = isDarkMode ? 'rgba(253, 224, 71, 0.4)' : 'rgba(59, 130, 246, 0.35)'; // Starry Yellow vs Spring wind Blue
+
+            particles.forEach(p => {
+                pCtx.beginPath();
+                pCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                pCtx.fill();
+
+                // Move
+                p.x += p.speedX;
+                p.y += p.speedY;
+
+                // Reset on escape
+                if (p.y > pCanvas.height) {
+                    p.y = 0;
+                    p.x = Math.random() * pCanvas.width;
+                }
+                if (p.x > pCanvas.width || p.x < 0) {
+                    p.x = Math.random() * pCanvas.width;
+                }
+            });
+
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+        // High-end Confetti Burst system (Visual reward for reaching Max milestone)
+        let confettiParticles = [];
+        let confettiAnimationId = null;
+        const cCanvas = document.getElementById('confetti-canvas');
+        const cCtx = cCanvas.getContext('2d');
+
+        function triggerConfetti() {
+            cCanvas.width = window.innerWidth;
+            cCanvas.height = window.innerHeight;
+            cCanvas.classList.remove('hidden');
+            confettiParticles = [];
+
+            const colors = ['#f43f5e', '#3b82f6', '#10b981', '#fbbf24', '#a855f7', '#ec4899'];
+            
+            for (let i = 0; i < 150; i++) {
+                confettiParticles.push({
+                    x: Math.random() * cCanvas.width,
+                    y: Math.random() * cCanvas.height - cCanvas.height,
+                    r: Math.random() * 6 + 4,
+                    d: Math.random() * cCanvas.height,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    tilt: Math.random() * 10 - 5,
+                    tiltAngleIncremental: Math.random() * 0.07 + 0.02,
+                    tiltAngle: 0
+                });
+            }
+
+            if (confettiAnimationId) cancelAnimationFrame(confettiAnimationId);
+            drawConfetti();
+
+            // Hide canvas after 6 seconds to optimize resources
+            setTimeout(() => {
+                cCanvas.classList.add('hidden');
+                cancelAnimationFrame(confettiAnimationId);
+            }, 6000);
+        }
+
+        function drawConfetti() {
+            cCtx.clearRect(0, 0, cCanvas.width, cCanvas.height);
+
+            confettiParticles.forEach((p, index) => {
+                p.tiltAngle += p.tiltAngleIncremental;
+                p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2;
+                p.x += Math.sin(p.tiltAngle);
+                p.tilt = Math.sin(p.tiltAngle - index / 3) * 15;
+
+                cCtx.beginPath();
+                cCtx.lineWidth = p.r;
+                cCtx.strokeStyle = p.color;
+                cCtx.moveTo(p.x + p.tilt + p.r / 2, p.y);
+                cCtx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+                cCtx.stroke();
+
+                if (p.y > cCanvas.height) {
+                    p.y = -20;
+                    p.x = Math.random() * cCanvas.width;
+                }
+            });
+
+            confettiAnimationId = requestAnimationFrame(drawConfetti);
+        }
+    </script>
+</body>
+</html>
